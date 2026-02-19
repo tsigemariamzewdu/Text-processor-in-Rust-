@@ -1,1 +1,5 @@
-hello this is tsigemariam writting rust for the time not the rust though the text to test it 
+Rust makes data processing clear and fast.
+Functional style in Rust uses iterators, closures, and combinators.
+Word counting should be case-insensitive, so RUST and rust match.
+Some words are short, some are longer, and some start with the same letter.
+
