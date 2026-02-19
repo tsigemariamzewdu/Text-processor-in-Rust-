@@ -28,6 +28,14 @@ fn main() {
         .unwrap_or_else(|err| handle_error(&err))
         .and_then(|s| s.chars().next());
 
+    let top_k: Option<usize> = get_flag_value(&args, "--top")
+        .unwrap_or_else(|err| handle_error(&err))
+        .and_then(|s| {
+            s.parse::<usize>().ok().or_else(|| {
+                handle_error("--top requires a valid positive number")
+            })
+        });
+
     // 4. Read file
     let content = fs::read_to_string(&file_path).unwrap_or_else(|err| {
         eprintln!("Failed to read file '{}': {}", file_path, err);
@@ -52,6 +60,12 @@ fn main() {
     let unique_words: usize = word_counts.len();
     let most_common = word_counts.iter().max_by_key(|(_, count)| *count);
 
+    let mut sorted_words: Vec<_> = word_counts.iter().collect();
+    sorted_words.sort_by(|a, b| b.1.cmp(a.1));
+
+    let k = top_k.unwrap_or(10).min(sorted_words.len());
+
+
     println!("--- Word Frequency Stats ---");
     println!("Total words:   {}", total_words);
     println!("Unique words:  {}", unique_words);
@@ -60,6 +74,11 @@ fn main() {
         Some((word, count)) => println!("Most common:   '{}' ({})", word, count),
         None => println!("Most common:   (none)"),
     }
+    println!("\nTop {} most frequent words:", k);
+        for (i, (word, count)) in sorted_words.iter().take(k).enumerate() {
+            println!("{:>2}. {:<15} → {}", i + 1, word, count);
+        }
+
 }
 
 /// Helper to print error and exit
@@ -89,7 +108,7 @@ fn build_filter(
     min_length: Option<usize>,
     starts_with: Option<char>,
 ) -> impl Fn(&String) -> bool {
-    // move captures the values into the closure's "backpack"
+
     move |word: &String| {
         let len_ok = min_length.map_or(true, |n| word.len() > n);
         let starts_ok = starts_with.map_or(true, |c| {
